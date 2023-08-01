@@ -61,3 +61,4 @@ def send_email(email, code):
             'content_type': 'html'
         }
     )
+

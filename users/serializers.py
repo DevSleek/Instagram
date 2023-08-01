@@ -26,7 +26,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user = super(SignUpSerializer, self.create(validated_data))
+        user = super(SignUpSerializer, self).create(validated_data)
         if user.auth_type == VIA_EMAIL:
             code = user.create_verify_code(VIA_EMAIL)
             send_email(user.email, code)
@@ -56,14 +56,15 @@ class SignUpSerializer(serializers.ModelSerializer):
             }
         else:
             data = {
-                'success':False,
+                'success': False,
                 'message': 'You must send email or phone number'
             }
             raise ValidationError(data)
 
         return data
 
-    def validate_email_phone_number(self, value):
+    @staticmethod
+    def validate_email_phone_number(value):
         value = value.lower()
 
         return value
