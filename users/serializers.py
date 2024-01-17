@@ -29,7 +29,6 @@ class SignUpSerializer(serializers.ModelSerializer):
         user = super(SignUpSerializer, self).create(validated_data)
         if user.auth_type == VIA_EMAIL:
             code = user.create_verify_code(VIA_EMAIL)
-            print(code)
             send_email(user.email, code)
         elif user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
@@ -70,3 +69,10 @@ class SignUpSerializer(serializers.ModelSerializer):
         value = value.lower()
 
         return value
+
+    def to_representation(self, instance):
+        print("to_rep", instance)
+        data = super(SignUpSerializer, self).to_representation(instance)
+        data.update(instance.token())
+
+        return data
