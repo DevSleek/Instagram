@@ -1,5 +1,6 @@
 import re
 import threading
+import phonenumbers
 
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
@@ -10,10 +11,11 @@ phone_regex = re.compile(r"(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+")
 
 
 def check_email_or_phone(email_or_phone):
+    phone_number = phonenumbers.parse(email_or_phone)
     if re.fullmatch(email_regex, email_or_phone):
         email_or_phone = 'email'
 
-    elif re.fullmatch(phone_regex, email_or_phone):
+    elif phonenumbers.is_valid_number(phone_number):
         email_or_phone = 'phone'
 
     else:

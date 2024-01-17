@@ -18,3 +18,5 @@ sqlparse==0.4.4
 typing_extensions==4.6.3
 virtualenv==20.23.0
 virtualenv-clone==0.5.7
+
+phonenumbers~=8.13.28

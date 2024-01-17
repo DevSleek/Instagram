@@ -67,6 +67,18 @@ class SignUpSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_email_phone_number(value):
         value = value.lower()
+        if value and User.objects.filter(email=value).exists():
+            data = {
+                'success': False,
+                'message': 'Bu email allaqachon foydalanib bo\'lingan'
+            }
+            raise ValidationError(data)
+        elif value and User.objects.filter(phone_number=value).exists():
+            data = {
+                'success': False,
+                'message': 'Bu telefon raqam allaqachon foydalanib bo\'lingan'
+            }
+            raise ValidationError(data)
 
         return value
 
