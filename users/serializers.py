@@ -1,4 +1,4 @@
-from shared.utility import check_email_or_phone, send_email
+from shared.utility import check_email_or_phone, send_email, send_phone_code
 from .models import User, UserConfirmation, VIA_PHONE, VIA_EMAIL, CODE_VERIFIED, DONE, PHOTO_STEP
 from rest_framework import exceptions
 from django.db.models import Q
@@ -32,7 +32,7 @@ class SignUpSerializer(serializers.ModelSerializer):
             send_email(user.email, code)
         elif user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
-            # send_phone(user.phone_number, code)
+            send_phone_code(user.phone_number, code)
         user.save()
         return user
 
@@ -70,20 +70,19 @@ class SignUpSerializer(serializers.ModelSerializer):
         if value and User.objects.filter(email=value).exists():
             data = {
                 'success': False,
-                'message': 'Bu email allaqachon foydalanib bo\'lingan'
+                'message': 'This email is already in use'
             }
             raise ValidationError(data)
         elif value and User.objects.filter(phone_number=value).exists():
             data = {
                 'success': False,
-                'message': 'Bu telefon raqam allaqachon foydalanib bo\'lingan'
+                'message': 'This phone number is already in use'
             }
             raise ValidationError(data)
 
         return value
 
     def to_representation(self, instance):
-        print("to_rep", instance)
         data = super(SignUpSerializer, self).to_representation(instance)
         data.update(instance.token())
 

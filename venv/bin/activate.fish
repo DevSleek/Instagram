@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/home/sukhrob/Documents/Projects/Web/instagram/venv"
+set -gx VIRTUAL_ENV "/home/sukhrob/Projects/instagram/venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH

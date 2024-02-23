@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # packages
     'rest_framework_simplejwt',
     'rest_framework',
+    'twilio',
 
     # local apps
     'users',

@@ -1,6 +1,9 @@
 import re
 import threading
+from twilio.rest import Client
+
 import phonenumbers
+from decouple import config
 
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
@@ -11,11 +14,10 @@ phone_regex = re.compile(r"(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+")
 
 
 def check_email_or_phone(email_or_phone):
-    phone_number = phonenumbers.parse(email_or_phone)
     if re.fullmatch(email_regex, email_or_phone):
         email_or_phone = 'email'
 
-    elif phonenumbers.is_valid_number(phone_number):
+    elif phonenumbers.is_valid_number(phonenumbers.parse(email_or_phone)):
         email_or_phone = 'phone'
 
     else:
@@ -64,3 +66,13 @@ def send_email(email, code):
         }
     )
 
+
+def send_phone_code(phone, code):
+    account_sid = config('account_sid')
+    auth_token = config('auth_token')
+    client = Client(account_sid, auth_token)
+    client.messages.create(
+        body=f"Salom do'stim! Sizning tasdiqlash kodingiz: {code}\n",
+        from_="+18148134564",
+        to=f"{phone}"
+    )

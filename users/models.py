@@ -1,6 +1,7 @@
 import random
 import uuid
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import FileExtensionValidator
@@ -12,6 +13,7 @@ from shared.models import BaseModel
 ORDINARY_USER, MANAGER, ADMIN = ('ordinary_user', 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ('via_email', 'via_phone')
 NEW, CODE_VERIFIED, DONE, PHOTO_STEP = ('new', 'code_verified', 'done', 'photo_step')
+
 
 class User(AbstractUser, BaseModel):
     USER_ROLES = (
@@ -54,7 +56,7 @@ class User(AbstractUser, BaseModel):
 
     def check_username(self):
         if not self.username:
-            temp_username = f'instagram-{uuid.uuid4().__str__().split("-")[-1]}'
+            temp_username = f'instagram-{uuid.uuid4().__str__().split("-")[1]}'
             while User.objects.filter(username=temp_username):
                 temp_username = f"{temp_username}{random.randint(0,9)}"
             self.username = temp_username
@@ -66,7 +68,7 @@ class User(AbstractUser, BaseModel):
 
     def check_pass(self):
         if not self.password:
-            temp_password = f'password-{uuid.uuid4().__str__().split("-")[-1]}'
+            temp_password = f'password-{uuid.uuid4().__str__().split("-")[1]}'
             self.password = temp_password
 
     def hashing_password(self):
@@ -80,11 +82,9 @@ class User(AbstractUser, BaseModel):
             'refresh_token': str(refresh)
         }
 
-
     def save(self, *args, **kwargs):
-            self.clean()
-            super(User, self).save(*args, **kwargs)
-
+        self.clean()
+        super(User, self).save(*args, **kwargs)
 
     def clean(self):
         self.check_email()
@@ -105,16 +105,16 @@ class UserConfirmation(BaseModel):
     code = models.CharField(max_length=4)
     verify_type = models.CharField(max_length=31, choices=TYPE_CHOICES)
     user = models.ForeignKey('users.User', models.CASCADE, related_name='verify_codes', db_constraint=False)
-    expiration_time = models.DateTimeField(null=True)
+    expiration_time = models.DateTimeField(default=datetime.now())
     is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.user.__str__())
 
     def save(self, *args, **kwargs):
-        if not self.pk:
-            if self.verify_type == VIA_EMAIL:
-                self.expiration_tme = datetime.now() + timedelta(minutes=EMAIL_EXPIRE)
-            else:
-                self.expiration_tme = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
+        if self.verify_type == VIA_EMAIL:
+            self.expiration_time = datetime.now() + timedelta(minutes=EMAIL_EXPIRE)
+        else:
+            self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
+
         super(UserConfirmation, self).save(*args, **kwargs)
