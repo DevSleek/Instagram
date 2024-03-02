@@ -1,8 +1,8 @@
 import random
 import uuid
+
 from datetime import datetime, timedelta
 from django.utils import timezone
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import FileExtensionValidator
 from django.db import models
@@ -105,7 +105,7 @@ class UserConfirmation(BaseModel):
     code = models.CharField(max_length=4)
     verify_type = models.CharField(max_length=31, choices=TYPE_CHOICES)
     user = models.ForeignKey('users.User', models.CASCADE, related_name='verify_codes', db_constraint=False)
-    expiration_time = models.DateTimeField(default=datetime.now())
+    expiration_time = models.DateTimeField(default=timezone.now)
     is_confirmed = models.BooleanField(default=False)
 
     def __str__(self):
