@@ -1,10 +1,11 @@
 from shared.utility import check_email_or_phone, send_email, send_phone_code
-from .models import User, UserConfirmation, VIA_PHONE, VIA_EMAIL, CODE_VERIFIED, DONE, PHOTO_STEP
+from .models import User, UserConfirmation, VIA_PHONE, VIA_EMAIL, CODE_VERIFIED, DONE, PHOTO_DONE
 from rest_framework import exceptions
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
+from django.core.validators import FileExtensionValidator
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -133,5 +134,17 @@ class ChangeUserInfoSerializer(serializers.Serializer):
         if instance.auth_status == CODE_VERIFIED:
             instance.auth_status = DONE
         instance.save()
+        return instance
+
+
+class ChangeUserPhotoSerializer(serializers.Serializer):
+    photo = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=('jpg', 'jpeg', 'png', 'heir', 'heif'))])
+
+    def update(self, instance, validated_data):
+        photo = validated_data.get('photo')
+        if photo:
+            instance.photo = photo
+            instance.auth_status = PHOTO_DONE
+            instance.save()
         return instance
 

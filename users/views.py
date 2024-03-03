@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
 
-from .serializers import SignUpSerializer, ChangeUserInfoSerializer
+from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from shared.utility import send_email, send_phone_code
 
@@ -116,3 +116,19 @@ class ChangeUserInfoAPIView(UpdateAPIView):
             'auth_status': self.request.user.auth_status
         }
         return Response(data, status=200)
+
+
+class ChangeUserPhotoAPIVIew(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request, *args, **kwargs):
+        serializer = ChangeUserPhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            serializer.update(user, serializer.validated_data)
+            return Response(
+                {
+                'message': 'Change photo successfully'
+                }
+            )
+        return Response(serializer.errors, status=400)
