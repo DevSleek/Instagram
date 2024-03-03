@@ -4,6 +4,7 @@ from rest_framework import exceptions
 from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -57,7 +58,6 @@ class SignUpSerializer(serializers.ModelSerializer):
             }
         else:
             data = {
-                'success': False,
                 'message': 'You must send email or phone number'
             }
             raise ValidationError(data)
@@ -69,13 +69,11 @@ class SignUpSerializer(serializers.ModelSerializer):
         value = value.lower()
         if value and User.objects.filter(email=value).exists():
             data = {
-                'success': False,
                 'message': 'This email is already in use'
             }
             raise ValidationError(data)
         elif value and User.objects.filter(phone_number=value).exists():
             data = {
-                'success': False,
                 'message': 'This phone number is already in use'
             }
             raise ValidationError(data)
@@ -87,3 +85,53 @@ class SignUpSerializer(serializers.ModelSerializer):
         data.update(instance.token())
 
         return data
+
+
+class ChangeUserInfoSerializer(serializers.Serializer):
+    first_name = serializers.CharField(write_only=True, required=True)
+    last_name = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        password = data.get('password')
+        confirm_password = data.get('confirm_password')
+        if password != confirm_password:
+            raise ValidationError(
+                {
+                    'message': 'The passwords do not match'
+                }
+            )
+        if password:
+            validate_password(password)
+            validate_password(confirm_password)
+        return data
+
+    def validate_username(self, username):
+        if len(username) < 6 or len(username) > 15:
+            raise ValidationError(
+                {
+                    'message': 'Username must be between 6 and 15 characters long'
+                }
+            )
+        if username.isdigit():
+            raise ValidationError(
+                {
+                    'message': 'The username is entirely numeric'
+                }
+            )
+        return username
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.username = validated_data.get('username', instance.username)
+        instance.password = validated_data.get('password', instance.password)
+        if validated_data.get('password'):
+            instance.set_password(validated_data.get('password'))
+        if instance.auth_status == CODE_VERIFIED:
+            instance.auth_status = DONE
+        instance.save()
+        return instance
+

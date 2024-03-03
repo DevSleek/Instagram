@@ -6,13 +6,14 @@ from rest_framework.exceptions import ValidationError
 from django.utils.datetime_safe import datetime
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import UpdateAPIView
 
-from .serializers import SignUpSerializer
+from .serializers import SignUpSerializer, ChangeUserInfoSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from shared.utility import send_email, send_phone_code
 
 
-class CreateUserView(CreateAPIView):
+class CreateUserAPIView(CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = SignUpSerializer
@@ -55,7 +56,8 @@ class UserVerifyAPIView(APIView):
         return True
 
 
-class GetNewVevification(APIView):
+class GetNewVevificationAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         user = self.request.user
@@ -87,3 +89,30 @@ class GetNewVevification(APIView):
                 'messages': 'Wait a little while your code is still usable.'
             }
             raise ValidationError(data)
+
+
+class ChangeUserInfoAPIView(UpdateAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = ChangeUserInfoSerializer
+    http_method_names = ['patch', 'put']
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        super(ChangeUserInfoAPIView, self).update(request, *args, **kwargs)
+        data = {
+            'success': True,
+            'message': 'User updated successfully',
+            'auth_status': self.request.user.auth_status
+        }
+        return Response(data, status=200)
+
+    def partial_update(self, request, *args, **kwargs):
+        super(ChangeUserInfoAPIView, self).partial_update(request, *args, **kwargs)
+        data = {
+            'success': True,
+            'message': 'User partial updated successfully',
+            'auth_status': self.request.user.auth_status
+        }
+        return Response(data, status=200)
