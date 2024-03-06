@@ -7,8 +7,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import FileExtensionValidator
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.generics import get_object_or_404
+from django.contrib.auth.models import update_last_login
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -162,7 +165,7 @@ class UserLoginSerializer(TokenObtainPairSerializer):
         user_input = data.get('user_input')
         if check_user_type(user_input) == 'username':
             username = user_input
-        elif check_user_type(user_input) == 'phone':
+        elif check_user_type(user_inpu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t) == 'phone':
             user = self.get_user(phone_number=user_input)
             username = user.username
         elif check_user_type(user_input) == 'email':
@@ -214,3 +217,18 @@ class UserLoginSerializer(TokenObtainPairSerializer):
                 }
             )
         return users.first()
+
+
+class LoginRefreshTokenSerializer(TokenRefreshSerializer):
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        access_token_instance = AccessToken(data['access'])
+        user_id = access_token_instance['user_id']
+        user = get_object_or_404(User, id=user_id)
+        update_last_login(None, user)
+        return data
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()

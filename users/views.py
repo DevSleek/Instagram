@@ -7,9 +7,11 @@ from django.utils.datetime_safe import datetime
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer, UserLoginSerializer
+from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer, UserLoginSerializer, LoginRefreshTokenSerializer, LogoutSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from shared.utility import send_email, send_phone_code
 
@@ -134,3 +136,27 @@ class ChangeUserPhotoAPIVIew(APIView):
 
 class LoginView(TokenObtainPairView):
     serializer_class = UserLoginSerializer
+
+
+class LoginRefreshView(TokenRefreshView):
+    serializer_class = LoginRefreshTokenSerializer
+
+
+class LogoutAPIView(APIView):
+    serializer_class = LogoutSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            refresh_token = self.request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            data = {
+                'success': True,
+                'message': 'You are logged out'
+            }
+            return Response(data, status=205)
+        except TokenError:
+            return Response(status=400)
