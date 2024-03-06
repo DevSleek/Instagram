@@ -7,8 +7,9 @@ from django.utils.datetime_safe import datetime
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
+from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer
+from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer, UserLoginSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from shared.utility import send_email, send_phone_code
 
@@ -42,7 +43,6 @@ class UserVerifyAPIView(APIView):
 
         if not verifies.exists():
             data = {
-                "success": False,
                 "message": "Your verification code is incorrect or out of date."
             }
             raise ValidationError(data)
@@ -75,7 +75,6 @@ class GetNewVevificationAPIView(APIView):
             raise ValidationError(data)
         return Response(
             {
-                'success': True,
                 'message': 'Your verification code has been resent.'
             }
         )
@@ -85,7 +84,6 @@ class GetNewVevificationAPIView(APIView):
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), is_confirmed=False)
         if verifies.exists():
             data = {
-                'success': False,
                 'messages': 'Wait a little while your code is still usable.'
             }
             raise ValidationError(data)
@@ -132,3 +130,7 @@ class ChangeUserPhotoAPIVIew(APIView):
                 }
             )
         return Response(serializer.errors, status=400)
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = UserLoginSerializer
