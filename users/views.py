@@ -11,7 +11,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer, UserLoginSerializer, LoginRefreshTokenSerializer, LogoutSerializer, ForgotPasswordSerializer
+from .serializers import SignUpSerializer, ChangeUserInfoSerializer, ChangeUserPhotoSerializer, \
+    UserLoginSerializer, LoginRefreshTokenSerializer, LogoutSerializer, ForgotPasswordSerializer, \
+    ResetPasswordSerializer
 from .models import User, DONE, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
 from shared.utility import send_email, send_phone_code, check_email_or_phone
 
@@ -184,5 +186,29 @@ class ForgotPasswordAPIView(APIView):
                 'access': user.token()['access'],
                 'refresh': user.token()['refresh_token'],
                 'user_status': user.auth_status,
+            }
+        )
+
+
+class ResetPasswordView(UpdateAPIView):
+    serializer_class = ResetPasswordSerializer
+    permission_classes = (IsAuthenticated, )
+    http_method_names = ['patch', 'put']
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        response = super(ResetPasswordView, self).update(request, *args, **kwargs)
+        try:
+            user = User.objects.get(id=response.data.get('id'))
+        except ObjectDoesNotExist as e:
+            raise NotFound(detail='User not found')
+        return Response(
+            {
+                'success': True,
+                'message': "Parolingiz muvaffaqiyatli o'zgartirildi",
+                'access': user.token()['access'],
+                'refresh': user.token()['refresh_token'],
             }
         )
