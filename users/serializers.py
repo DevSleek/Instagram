@@ -232,3 +232,22 @@ class LoginRefreshTokenSerializer(TokenRefreshSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email_or_phone = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, attrs):
+         email_or_phone = attrs.get('email_or_phone')
+         if email_or_phone is None:
+             raise ValidationError(
+                 {
+                     'success': False,
+                     'message': 'Email or phone number must be entered!'
+                 }
+             )
+         user = User.objects.filter(Q(phone_number=email_or_phone) | Q(email=email_or_phone))
+         if not user.exists():
+             raise NotFound(detail='User not found')
+         attrs['user'] = user.first()
+         return attrs
