@@ -21,7 +21,7 @@ class Post(BaseModel):
 
 class PostComment(BaseModel):
     auhtor = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='post_comments')
     content = models.TextField(validators=[MaxLengthValidator(2000)])
     parent = models.ForeignKey('self', on_delete=models.CASCADE, related_name='child', null=True, blank=True)
 
