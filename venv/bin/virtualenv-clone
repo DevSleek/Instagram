@@ -1,4 +1,4 @@
-#!/home/sukhrob/Projects/instagram/venv/bin/python3
+#!/home/sukhrob/PCProjects/instagram/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

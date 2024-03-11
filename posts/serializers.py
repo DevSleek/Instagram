@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Post, PostLike, PostComment
+from .models import Post, PostLike, PostComment, CommentLike
 from users.models import User
 
 
@@ -9,7 +9,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'photo')
+        fields = [
+            'id',
+            'username',
+            'photo'
+        ]
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -21,7 +25,15 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pos
-        fields = ('id', 'author', 'image', 'caption', 'created_time', 'post_likes_count', 'post_comments_count')
+        fields = [
+            'id',
+            'author',
+            'image',
+            'caption',
+            'created_time',
+            'post_likes_count',
+            'post_comments_count'
+        ]
 
     def get_post_likes_count(self, obj):
         return obj.post_likes.count()
@@ -49,7 +61,17 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'post', 'content', 'parent', 'created_time', 'replies', 'me_liked', 'comment_likes_count')
+        fields = [
+            'id',
+            'author',
+            'post',
+            'content',
+            'parent',
+            'created_time',
+            'replies',
+            'me_liked',
+            'comment_likes_count'
+        ]
 
     def get_replies(self, obj):
         if obj.child.exists():
@@ -67,3 +89,29 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_comment_likes_count(self, obj):
         return obj.comment_likes.count()
+
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = CommentLike
+        fields = [
+            'id',
+            'author',
+            'comment'
+        ]
+
+
+class PostLikeSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = PostLike
+        fields = [
+            'id',
+            'author',
+            'post'
+        ]
