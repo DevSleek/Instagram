@@ -1,10 +1,13 @@
 asgiref==3.7.2
 certifi==2023.5.7
+decouple==0.0.7
 distlib==0.3.6
 Django==4.2.1
+django-environ==0.11.2
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.2.2
 filelock==3.12.0
+phonenumbers==8.13.31
 Pillow==9.5.0
 pipenv==2023.4.29
 platformdirs==3.5.1
@@ -13,10 +16,9 @@ psycopg-binary==3.1.9
 psycopg2-binary==2.9.6
 PyJWT==2.7.0
 python-decouple==3.8
+python-dotenv==1.0.1
 pytz==2023.3
 sqlparse==0.4.4
 typing_extensions==4.6.3
 virtualenv==20.23.0
 virtualenv-clone==0.5.7
-
-phonenumbers~=8.13.28
