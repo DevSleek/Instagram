@@ -53,3 +53,22 @@ class PostRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
                 'message': 'Post successfully deleted',
             }
         )
+
+
+class PostCommentListAPIView(ListAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [AllowAny, ]
+
+    def get_queryset(self):
+        post_id = self.kwargs['pk']
+        queryset = PostComment.object.filter(post__id=post_id)
+        return queryset
+
+
+class PostCommentCreateAPIView(CreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def perform_create(self, serializer):
+        post_id = selfkwargs['pk']
+        serializer.save(author=self.request.user, post__id=post_id)
