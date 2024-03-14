@@ -1,4 +1,4 @@
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 
 
@@ -72,3 +72,34 @@ class PostCommentCreateAPIView(CreateAPIView):
     def perform_create(self, serializer):
         post_id = selfkwargs['pk']
         serializer.save(author=self.request.user, post__id=post_id)
+
+
+class CommentListCreateAPIView(ListCreateAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, ]
+    queryset = PostComment.objects.all()
+    pagination_class = CustomPagination
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+class PostLikeListAPIView(ListCreateAPIView):
+    serializer_class = PostLikeSerializer
+    permission_classes = [AllowAny, ]
+
+    def get_queryset(self):
+        post_id = self.kwargs['pk']
+        queryset = PostLike.objects.filter(post__id=post_id)
+        return queryset
+
+
+class CommentLikeListAPIView(ListCreateAPIView):
+    serializer_class = CommentLikeSerializer
+    permission_classes = [AllowAny, ]
+
+    def get_queryset(self):
+        comment_id = self.kwargs['pk']
+        queryset = PostLike.objects.filter(comment__id=comment_id)
+        return queryset
+
