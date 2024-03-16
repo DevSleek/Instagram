@@ -1,6 +1,8 @@
+from rest_framework import status, generics
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
-
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from shared.custom_pagination import CustomPagination
 from .models import Post, PostComment, PostLike, CommentLike
@@ -61,7 +63,7 @@ class PostCommentListAPIView(ListAPIView):
 
     def get_queryset(self):
         post_id = self.kwargs['pk']
-        queryset = PostComment.object.filter(post__id=post_id)
+        queryset = PostComment.objects.filter(post__id=post_id)
         return queryset
 
 
@@ -70,7 +72,7 @@ class PostCommentCreateAPIView(CreateAPIView):
     permission_classes = [IsAuthenticated, ]
 
     def perform_create(self, serializer):
-        post_id = selfkwargs['pk']
+        post_id = self.kwargs['pk']
         serializer.save(author=self.request.user, post__id=post_id)
 
 
@@ -84,7 +86,13 @@ class CommentListCreateAPIView(ListCreateAPIView):
         serializer.save(author=self.request.user)
 
 
-class PostLikeListAPIView(ListCreateAPIView):
+class CommentRetrieveView(generics.RetrieveAPIView):
+    serializer_class = CommentSerializer
+    permission_classes = [AllowAny, ]
+    queryset = PostComment.objects.all()
+
+
+class PostLikeListAPIView(ListAPIView):
     serializer_class = PostLikeSerializer
     permission_classes = [AllowAny, ]
 
@@ -94,7 +102,7 @@ class PostLikeListAPIView(ListCreateAPIView):
         return queryset
 
 
-class CommentLikeListAPIView(ListCreateAPIView):
+class CommentLikeListAPIView(ListAPIView):
     serializer_class = CommentLikeSerializer
     permission_classes = [AllowAny, ]
 
@@ -103,3 +111,58 @@ class CommentLikeListAPIView(ListCreateAPIView):
         queryset = PostLike.objects.filter(comment__id=comment_id)
         return queryset
 
+
+class PostLikeApiView(APIView):
+
+    def post(self, request, pk):
+        try:
+            post_like = PostLike.objects.get(
+                author=self.request.user,
+                post_id=pk
+            )
+            post_like.delete()
+            data = {
+                "success": True,
+                "message": "LIKE muvaffaqiyatli o'chirildi"
+            }
+            return Response(data, status=status.HTTP_204_NO_CONTENT)
+        except PostLike.DoesNotExist:
+            post_like = PostLike.objects.create(
+                author=self.request.user,
+                post_id=pk
+            )
+            serializer = PostLikeSerializer(post_like)
+            data = {
+                "success": True,
+                "message": "Postga LIKE muvaffaqiyatli qo'shildi",
+                "data": serializer.data
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
+
+
+class CommentLikeAPiView(APIView):
+    def post(self, request, pk):
+        try:
+            comment_like = CommentLike.objects.get(
+                author=self.request.user,
+                comment_id=pk
+            )
+            comment_like.delete()
+            data = {
+                "success": True,
+                "message": "LIKE muvaffaqiyatli o'chirildi",
+                "data": None
+            }
+            return Response(data, status=status.HTTP_204_NO_CONTENT)
+        except CommentLike.DoesNotExist:
+            comment_like = CommentLike.objects.create(
+                author=self.request.user,
+                comment_id=pk
+            )
+            serializer = CommentLikeSerializer(comment_like)
+            data = {
+                "success": True,
+                "message": "LIKE muvaffaqiyatli qo'shildi",
+                "data": serializer.data
+            }
+            return Response(data, status=status.HTTP_201_CREATED)
